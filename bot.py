@@ -1,10 +1,5 @@
-import discord
-from discord.ext import commands
-from discord import app_commands
 import os
 from dotenv import load_dotenv
-from obfuscator import LuaObfuscator
-import asyncio
 
 load_dotenv()
 
@@ -13,6 +8,19 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
     print("❌ ERROR: DISCORD_TOKEN not found in environment variables!")
     exit(1)
+
+try:
+    import discord
+    from discord.ext import commands
+    from discord import app_commands
+except ImportError:
+    print("❌ discord.py not installed")
+    exit(1)
+
+from obfuscator import LuaObfuscator
+from app import app
+from threading import Thread
+import asyncio
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -31,7 +39,6 @@ async def on_ready():
     except Exception as e:
         print(f"❌ Failed to sync commands: {e}")
 
-# HELP Command
 @bot.tree.command(name="help", description="Show help and information about the bot")
 async def help_command(interaction: discord.Interaction):
     embed = discord.Embed(
@@ -43,7 +50,8 @@ async def help_command(interaction: discord.Interaction):
     embed.add_field(
         name="📝 Commands",
         value="""
-`/obfuscate` - Obfuscate Lua code or files
+`/obfuscate code` - Obfuscate Lua code
+`/obfuscate file` - Obfuscate a file
 `/help` - Show this message
 `/invite` - Get bot invite link
         """,
@@ -55,9 +63,9 @@ async def help_command(interaction: discord.Interaction):
         value="""
 ✅ Remove Comments & Whitespace
 ✅ Variable Renaming
-✅ String Encryption (Base64)
+✅ String Encryption
 ✅ Add Junk Code
-✅ Support for File Uploads
+✅ File Upload Support
 ✅ Web Dashboard
         """,
         inline=False
@@ -73,17 +81,9 @@ async def help_command(interaction: discord.Interaction):
         inline=False
     )
     
-    embed.add_field(
-        name="🌐 Web Dashboard",
-        value="Check the bot status/web interface for GUI obfuscation",
-        inline=False
-    )
-    
     embed.set_footer(text="Made with ❤️ | Lua Obfuscator Bot")
-    
     await interaction.response.send_message(embed=embed)
 
-# INVITE Command
 @bot.tree.command(name="invite", description="Get the bot invite link")
 async def invite_command(interaction: discord.Interaction):
     invite_url = f"https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions=2048&scope=bot%20applications.commands"
@@ -96,7 +96,6 @@ async def invite_command(interaction: discord.Interaction):
     
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
-# OBFUSCATE Command
 obfuscate_group = app_commands.Group(name="obfuscate", description="Obfuscate Lua code")
 
 @obfuscate_group.command(name="code", description="Obfuscate Lua code directly")
@@ -133,7 +132,6 @@ async def obfuscate_code(interaction: discord.Interaction, code: str, level: str
         compression = ((original_size - obfuscated_size) / original_size * 100) if original_size > 0 else 0
         
         if len(obfuscated) > 2000:
-            # Send as file
             import tempfile
             with tempfile.NamedTemporaryFile(mode='w', suffix='.lua', delete=False) as f:
                 f.write(obfuscated)
@@ -152,7 +150,6 @@ async def obfuscate_code(interaction: discord.Interaction, code: str, level: str
             """, inline=False)
             
             await interaction.followup.send(embed=embed, file=discord.File(temp_path, "obfuscated.lua"))
-            
             os.remove(temp_path)
         else:
             embed = discord.Embed(
@@ -203,7 +200,7 @@ async def obfuscate_file(interaction: discord.Interaction, file: discord.Attachm
         await interaction.followup.send(embed=embed)
         return
     
-    if file.size > 25 * 1024 * 1024:  # 25MB limit
+    if file.size > 25 * 1024 * 1024:
         embed = discord.Embed(
             title="❌ File Too Large",
             description="Maximum 25MB file size allowed",
@@ -239,7 +236,6 @@ async def obfuscate_file(interaction: discord.Interaction, file: discord.Attachm
         """, inline=False)
         
         await interaction.followup.send(embed=embed, file=discord.File(temp_path, "obfuscated.lua"))
-        
         os.remove(temp_path)
     
     except Exception as e:
@@ -252,5 +248,15 @@ async def obfuscate_file(interaction: discord.Interaction, file: discord.Attachm
 
 bot.tree.add_command(obfuscate_group)
 
+def run_flask():
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+
 if __name__ == "__main__":
+    # Run Flask in background
+    flask_thread = Thread(target=run_flask, daemon=True)
+    flask_thread.start()
+    print("🌐 Flask server started")
+    
+    # Run bot
     bot.run(TOKEN)

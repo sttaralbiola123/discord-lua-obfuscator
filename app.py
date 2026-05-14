@@ -1,12 +1,9 @@
 from flask import Flask, render_template, request, jsonify
 import os
-from dotenv import load_dotenv
 from obfuscator import LuaObfuscator
 
-load_dotenv()
-
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 25 * 1024 * 1024  # 25MB max
+app.config['MAX_CONTENT_LENGTH'] = 25 * 1024 * 1024
 
 obfuscator = LuaObfuscator()
 
