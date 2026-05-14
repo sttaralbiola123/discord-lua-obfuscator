@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Lua Obfuscator Bot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1em;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        textarea, select, input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus, select:focus, input[type="file"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            min-height: 250px;
+            resize: vertical;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #eee;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #ddd;
+        }
+        
+        .stats {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .output-section {
+            margin-top: 30px;
+        }
+        
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .output-header h3 {
+            color: #333;
+        }
+        
+        .output-code {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Lua Obfuscator Bot</h1>
+            <p>Protect your Lua scripts for Delta, Synapse X & all executors</p>
+        </div>
+        
+        <div class="content">
+            <div id="message" class="message"></div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('code')">📝 Code</button>
+                <button class="tab-btn" onclick="switchTab('file')">📁 File</button>
+                <button class="tab-btn" onclick="switchTab('info')">ℹ️ Info</button>
+            </div>
+            
+            <!-- Code Tab -->
+            <div id="code" class="tab-content active">
+                <div class="form-group">
+                    <label for="code-input">Paste your Lua code:</label>
+                    <textarea id="code-input" placeholder="print('Hello World')"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="level">Protection Level:</label>
+                    <select id="level">
+                        <option value="light">🟢 Light (Fast)</option>
+                        <option value="medium" selected>🟡 Medium (Balanced)</option>
+                        <option value="heavy">🔴 Heavy (Maximum)</option>
+                    </select>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn-primary" onclick="obfuscateCode()">🔒 Obfuscate Code</button>
+                    <button class="btn-secondary" onclick="clearCode()">🗑️ Clear</button>
+                </div>
+            </div>
+            
+            <!-- File Tab -->
+            <div id="file" class="tab-content">
+                <div class="form-group">
+                    <label for="file-input">Upload Lua file:</label>
+                    <input type="file" id="file-input" accept=".lua,.txt" />
+                </div>
+                
+                <div class="form-group">
+                    <label for="file-level">Protection Level:</label>
+                    <select id="file-level">
+                        <option value="light">🟢 Light (Fast)</option>
+                        <option value="medium" selected>🟡 Medium (Balanced)</option>
+                        <option value="heavy">🔴 Heavy (Maximum)</option>
+                    </select>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn-primary" onclick="obfuscateFile()">🔒 Obfuscate File</button>
+                </div>
+            </div>
+            
+            <!-- Info Tab -->
+            <div id="info" class="tab-content">
+                <h3>📚 Features</h3>
+                <ul style="margin: 15px 0; margin-left: 20px;">
+                    <li>✅ Remove Comments & Whitespace</li>
+                    <li>✅ Variable Renaming</li>
+                    <li>✅ String Encryption</li>
+                    <li>✅ Add Junk Code</li>
+                    <li>✅ Full Minification</li>
+                    <li>✅ Compatible with all Roblox executors</li>
+                </ul>
+                
+                <h3 style="margin-top: 25px;">⚙️ Protection Levels</h3>
+                <div style="margin: 15px 0;">
+                    <strong>🟢 Light:</strong> Basic minification & comment removal<br>
+                    <strong>🟡 Medium:</strong> Light + Variable renaming<br>
+                    <strong>🔴 Heavy:</strong> Everything + String encryption + Junk code
+                </div>
+                
+                <h3 style="margin-top: 25px;">🤖 Discord Commands</h3>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <code>/obfuscate code &lt;code&gt; level:&lt;light/medium/heavy&gt;</code><br>
+                    <code>/obfuscate file &lt;file.lua&gt; level:&lt;light/medium/heavy&gt;</code><br>
+                    <code>/help</code><br>
+                    <code>/invite</code>
+                </div>
+            </div>
+            
+            <!-- Output -->
+            <div id="output" style="display: none; margin-top: 30px;">
+                <div class="output-header">
+                    <h3>✅ Obfuscated Code</h3>
+                    <div>
+                        <button class="btn-secondary" onclick="copyToClipboard()">📋 Copy</button>
+                        <button class="btn-secondary" onclick="downloadCode()">⬇️ Download</button>
+                    </div>
+                </div>
+                
+                <div class="output-code" id="output-code"></div>
+                
+                <div class="stats" id="stats"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            setTimeout(() => msg.className = 'message', 5000);
+        }
+        
+        async function obfuscateCode() {
+            const code = document.getElementById('code-input').value;
+            const level = document.getElementById('level').value;
+            
+            if (!code.trim()) {
+                showMessage('❌ Please paste some code first!', 'error');
+                return;
+            }
+            
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loading"></div> Processing...';
+            
+            try {
+                const response = await fetch('/api/obfuscate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, level })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    showMessage(`❌ Error: ${data.error}`, 'error');
+                } else {
+                    document.getElementById('output-code').textContent = data.obfuscated;
+                    updateStats(data.stats);
+                    document.getElementById('output').style.display = 'block';
+                    showMessage('✅ Code obfuscated successfully!', 'success');
+                    window.obfuscatedCode = data.obfuscated;
+                }
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '🔒 Obfuscate Code';
+        }
+        
+        async function obfuscateFile() {
+            const file = document.getElementById('file-input').files[0];
+            const level = document.getElementById('file-level').value;
+            
+            if (!file) {
+                showMessage('❌ Please select a file first!', 'error');
+                return;
+            }
+            
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loading"></div> Processing...';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('level', level);
+            
+            try {
+                const response = await fetch('/api/obfuscate-file', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    showMessage(`❌ Error: ${data.error}`, 'error');
+                } else {
+                    document.getElementById('output-code').textContent = data.obfuscated;
+                    updateStats(data.stats);
+                    document.getElementById('output').style.display = 'block';
+                    showMessage('✅ File obfuscated successfully!', 'success');
+                    window.obfuscatedCode = data.obfuscated;
+                }
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '🔒 Obfuscate File';
+        }
+        
+        function updateStats(stats) {
+            const compression = stats.original_size > 0 
+                ? Math.round((1 - stats.obfuscated_size / stats.original_size) * 100)
+                : 0;
+            
+            document.getElementById('stats').innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-value">${stats.original_size.toLocaleString()}</div>
+                    <div class="stat-label">Original Size (bytes)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${stats.obfuscated_size.toLocaleString()}</div>
+                    <div class="stat-label">Obfuscated Size (bytes)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${compression}%</div>
+                    <div class="stat-label">Compression</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${stats.level}</div>
+                    <div class="stat-label">Protection Level</div>
+                </div>
+            `;
+        }
+        
+        function copyToClipboard() {
+            navigator.clipboard.writeText(window.obfuscatedCode);
+            showMessage('✅ Copied to clipboard!', 'success');
+        }
+        
+        function downloadCode() {
+            const el = document.createElement('a');
+            el.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(window.obfuscatedCode));
+            el.setAttribute('download', 'obfuscated.lua');
+            el.style.display = 'none';
+            document.body.appendChild(el);
+            el.click();
+            document.body.removeChild(el);
+            showMessage('✅ Downloaded!', 'success');
+        }
+        
+        function clearCode() {
+            document.getElementById('code-input').value = '';
+            document.getElementById('output').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
